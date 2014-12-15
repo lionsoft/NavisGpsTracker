@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Navis Gps Tracker</title>
+
+    <!-- NavisGpsTracker references -->
+    <link href="css/index.css" rel="stylesheet"/>
+</head>
+<body>
+
+    <p>Navis Gps Tracker</p>
+
+    <hr />
+
+    <div id="err-container" style="display: none;">Error: <span id="err"></span></div>
+
+    <div id="coords" style="display: none;">
+
+        <div>Lat: <span id="lat"></span></div>
+        <div>Lon: <span id="lon"></span></div>
+        <div>Alt: <span id="alt"></span></div>
+        <div>Dir: <span id="dir"></span></div>
+        <div>Speed: <span id="speed"></span></div>
+
+    </div>
+
+
+    <!-- Cordova reference, this is added to your app when it's built. -->
+    <script src="cordova.js"></script>
+    <script src="scripts/platformOverrides.js"></script>
+
+    <script src="scripts/zepto.min.js"></script>
+
+    <script src="AppScripts/gps.js"></script>
+    <script src="AppScripts/index.js"></script>
+
+</body>
+</html>
