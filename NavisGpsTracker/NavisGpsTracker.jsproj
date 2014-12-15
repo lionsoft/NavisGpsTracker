@@ -468,7 +468,6 @@
     <Content Include="config.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="index1.html" />
     <TypeScriptCompile Include="AppScripts\gps.ts" />
     <TypeScriptCompile Include="AppScripts\index.ts" />
     <TypeScriptCompile Include="AppScripts\sendPositionService.ts" />

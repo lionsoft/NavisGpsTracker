@@ -9,9 +9,10 @@ window.onload = function () {
 };
 
 function initialize() {
+    initialized = false;
     document.addEventListener('deviceready', onDeviceReady, false);
 
-    //onDeviceReady();
+    setTimeout(onDeviceReady, 1000);
 }
 
 function onPause() {
@@ -22,9 +23,12 @@ function onResume() {
 
 }
 
+var initialized = false;
+
 //PhoneGap is ready function
 function onDeviceReady() {
-
+    if (initialized) return;
+    initialized = true;
     $('#footer').html("Initializing...");
     document.addEventListener('pause', onPause, false);
     document.addEventListener('resume', onResume, false);
@@ -60,6 +64,7 @@ function max_height() {
 
 var firstTime = false;
 var mapInitialized = false;
+var lastPosition;
 
 function map() {
     mapInitialized = false;
@@ -76,6 +81,8 @@ function map() {
 
     google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
         mapInitialized = true;
+        if (lastPosition)
+            geo_success(lastPosition);
     });
 }
 
@@ -86,61 +93,68 @@ function geo_error(error) {
 
 
 function geo_success(position) {
-
     $('#footer').html(getReadableTime(new Date(position.timestamp))
         + ': (' + position.coords.latitude.toFixed(4) + ',' + position.coords.longitude.toFixed(4) + ')'
         + ' v: ' + (position.coords.speed ? position.coords.speed.toFixed(1) : '?')
         + ' dir: ' + (position.coords.heading ? position.coords.heading.toFixed(1) : '?')
     );
 
-    if (!mapInitialized) return;
+    if (mapInitialized) {
+        map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+        if (firstTime) {
+            map.setZoom(15);
+            firstTime = false;
+        }
 
-    map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-    if (firstTime) {
-        map.setZoom(15);
-        firstTime = false;
-    }
+        var info =
+            ('Latitude: ' + position.coords.latitude + '<br>' +
+            'Longitude: ' + position.coords.longitude + '<br>' +
+            'Altitude: ' + position.coords.altitude + '<br>' +
+            'Accuracy: ' + position.coords.accuracy + '<br>' +
+            'Altitude Accuracy: ' + position.coords.altitudeAccuracy + '<br>' +
+            'Heading: ' + position.coords.heading + '<br>' +
+            'Speed: ' + position.coords.speed + '<br>' +
+            'Timestamp: ' + new Date(position.timestamp));
 
-    var info =
-        ('Latitude: ' + position.coords.latitude + '<br>' +
-        'Longitude: ' + position.coords.longitude + '<br>' +
-        'Altitude: ' + position.coords.altitude + '<br>' +
-        'Accuracy: ' + position.coords.accuracy + '<br>' +
-        'Altitude Accuracy: ' + position.coords.altitudeAccuracy + '<br>' +
-        'Heading: ' + position.coords.heading + '<br>' +
-        'Speed: ' + position.coords.speed + '<br>' +
-        'Timestamp: ' + new Date(position.timestamp));
+        var point = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
-    var point = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-    if (!marker) {
-        //create marker
-        marker = new google.maps.Marker({
-            position: point,
-            icon: {
-                path: position.coords.heading != null ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW : google.maps.SymbolPath.CIRCLE,
-                scale: 8, 
-                rotation: position.coords.heading,
+        var createIcon = function(heading) {
+            return {
+                path: heading ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW : google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                rotation: heading,
                 fillOpacity: 0.5,
                 fillColor: '#0000EF',
                 strokeWeight: 1,
                 strokeColor: "blue",
-            },
-            map: map,
+            };
+        }
+
+        if (!marker) {
+            //create marker
+            marker = new google.maps.Marker({
+                position: point,
+                icon: createIcon(position.coords.heading),
+                map: map,
+            });
+        } else {
+            //move marker to new position
+            marker.setPosition(point);
+            marker.setIcon(createIcon(position.coords.heading));
+        }
+        if (!infowindow) {
+            infowindow = new google.maps.InfoWindow({
+                content: info
+            });
+        } else {
+            infowindow.setContent(info);
+        }
+        google.maps.event.addListener(marker, 'click', function () {
+            infowindow.open(map, marker);
         });
-    } else {
-        //move marker to new position
-        marker.setPosition(point);
     }
-    if (!infowindow) {
-        infowindow = new google.maps.InfoWindow({
-            content: info
-        });
-    } else {
-        infowindow.setContent(info);
-    }
-    google.maps.event.addListener(marker, 'click', function () {
-        infowindow.open(map, marker);
-    });
+
+    lastPosition = position;
 }
 
 function padZero(num) {
